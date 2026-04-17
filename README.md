@@ -9,7 +9,7 @@
 * Flask
 * Flask-SQLAlchemy
 * Flask-Bcrypt
-* SQLite (ou outro banco)
+* SQLite
 
 ---
 
