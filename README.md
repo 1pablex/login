@@ -18,8 +18,8 @@
 ### 🔽 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/seu-usuario/nome-do-repo.git
-cd nome-do-repo
+git clone https://github.com/1pablex/login
+cd login
 ```
 
 ---
