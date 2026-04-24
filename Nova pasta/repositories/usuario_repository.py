@@ -10,8 +10,8 @@ def nome_existe(nome):
     return Usuario.query.filter_by(nome=nome).first() is not None
 
 
-def criar_usuario(nome, senha_hash, role_id):
-    usuario = Usuario(nome=nome, senha_hash=senha_hash, Role_id=role_id)
+def criar_usuario(nome, email, senha_hash, role_id):
+    usuario = Usuario(nome=nome, email=email, senha_hash=senha_hash, Role_id=role_id)
     db.session.add(usuario)
     db.session.commit()
     return usuario

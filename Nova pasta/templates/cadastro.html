@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Cadastro</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: sans-serif; background: #f4f4f4; display: flex;
@@ -25,15 +25,12 @@
     .alert-success { background: #EAF3DE; color: #3B6D11; border: 1px solid #97C459; }
     .toggle { text-align: center; font-size: 13px; color: #666; margin-top: 1rem; }
     .toggle a { color: #1D9E75; font-weight: 500; text-decoration: none; }
-    .forgot { text-align: right; font-size: 12px; margin-top: -0.5rem; margin-bottom: 1rem; }
-    .forgot a { color: #1D9E75; text-decoration: none; }
-    .forgot a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 <div class="card">
-  <h1>Entrar</h1>
-  <p class="subtitle">Acesse sua conta</p>
+  <h1>Cadastro</h1>
+  <p class="subtitle">Crie sua conta</p>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% for category, message in messages %}
@@ -44,20 +41,21 @@
   <form method="POST">
     <div class="field">
       <label>Usuário</label>
-      <input type="text" name="username" required placeholder="digite seu usuário">
+      <input type="text" name="username" required placeholder="escolha um usuário">
+    </div>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" name="email" required placeholder="seu@email.com">
     </div>
     <div class="field">
       <label>Senha</label>
       <input type="password" name="password" required placeholder="••••••••">
     </div>
-    <div class="forgot">
-      <a href="{{ url_for('recuperar_senha') }}">Esqueceu a senha?</a>
-    </div>
-    <button class="btn" type="submit">Entrar</button>
+    <button class="btn" type="submit">Criar conta</button>
   </form>
 
   <div class="toggle">
-    Não tem conta? <a href="{{ url_for('cadastro') }}">Cadastre-se</a>
+    Já tem conta? <a href="{{ url_for('login') }}">Entrar</a>
   </div>
 </div>
 </body>
