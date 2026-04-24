@@ -10,7 +10,7 @@
 * Flask-SQLAlchemy
 * Flask-Bcrypt
 * SQLite
-
+*brevo
 ---
 
 ## ⚙️ Como rodar o projeto
