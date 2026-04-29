@@ -1,11 +1,11 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_bcrypt import Bcrypt
-from database import init_db
+from database import init_db , db
 from flask_talisman import Talisman 
 from models import Usuario
 from repositories.usuario_repository import buscar_por_nome, nome_existe, criar_usuario
-from services.email_service import init_mail, enviar_email_recuperacao, gerar_token_recuperacao, token_valido
+from services.email_service import init_mail, enviar_email_recuperacao, gerar_token_recuperacao, token_valido, gerar_codigo_2fa, enviar_codigo_2fa, codigo_2fa_valido, token_valido
 from services.autenticacao import atualizar_senha, senha_valida, role_valida
 from dotenv import load_dotenv
 
@@ -39,13 +39,45 @@ def login():
         usuario = buscar_por_nome(nome)
 
         if usuario and bcrypt.check_password_hash(usuario.senha_hash, senha):
+            codigo = gerar_codigo_2fa(usuario)
+            try:
+                enviar_codigo_2fa(usuario.email, usuario.nome, codigo)
+            except Exception as e:
+                app.logger.error(f"Erro ao enviar código 2FA: {e}")
+
+            session["2fa_usuario_id"] = usuario.id
+            return redirect(url_for("verificar_2fa"))  # <- deve estar aqui
+
+        flash("Usuário ou senha inválidos.", "danger")
+
+    return render_template("login.html", modo="login")
+
+@app.route("/verificar-2fa", methods=["GET", "POST"])
+def verificar_2fa():
+    usuario_id = session.get("2fa_usuario_id")
+    if not usuario_id:
+        return redirect(url_for("login"))
+ 
+    usuario = Usuario.query.get(usuario_id)
+ 
+    if request.method == "POST":
+        codigo = request.form["codigo"].strip()
+ 
+        if codigo_2fa_valido(usuario, codigo):
+            # Limpa código e completa autenticação
+            usuario.codigo_2fa        = None
+            usuario.codigo_2fa_expiry = None
+            db.session.commit()
+ 
+            session.pop("2fa_usuario_id", None)
             session["usuario_id"]   = usuario.id
             session["usuario_nome"] = usuario.nome
             session["usuario_role"] = usuario.role.nome
             return redirect(url_for("index"))
-        flash("Usuário ou senha inválidos.", "danger")
-
-    return render_template("login.html", modo="login")
+ 
+        flash("Código inválido ou expirado.", "danger")
+ 
+    return render_template("verificar_2fa.html")
 
 
 @app.route("/cadastro", methods=["GET", "POST"])

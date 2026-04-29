@@ -23,6 +23,9 @@ class Usuario(db.Model):
     Role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable=False)
     reset_token = db.Column(db.String(100), nullable=True)
     reset_token_expiry = db.Column(db.DateTime, nullable=True)
+    codigo_2fa = db.Column(db.String(6),  nullable=True)
+    codigo_2fa_expiry  = db.Column(db.DateTime,   nullable=True)
+
 
     def __repr__(self):
         return f"<Usuario {self.nome}>"

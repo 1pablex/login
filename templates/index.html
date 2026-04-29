@@ -3,54 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: sans-serif;
-      background: #f0f4f8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .card {
-      background: white;
-      padding: 2.5rem;
-      border-radius: 14px;
-      border: 1px solid #e0e0e0;
-      text-align: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-      max-width: 400px;
-      width: 100%;
-    }
-    .avatar {
-      font-size: 52px;
-      margin-bottom: 1rem;
-    }
-    h1 { font-size: 22px; color: #1a1a1a; margin-bottom: 0.3rem; }
-    .role-badge {
-      display: inline-block;
-      margin-top: 0.5rem;
-      padding: 4px 14px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .role-Psicologo { background: #e8f5e9; color: #2E7D32; border: 1px solid #a5d6a7; }
-    .role-Paciente  { background: #e3f2fd; color: #1565C0; border: 1px solid #90caf9; }
-    .logout {
-      display: inline-block;
-      margin-top: 2rem;
-      padding: 9px 20px;
-      background: #1D9E75;
-      color: white;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-    }
-    .logout:hover { background: #0F6E56; }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 <div class="card">
