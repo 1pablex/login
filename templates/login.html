@@ -16,6 +16,10 @@
   {% endfor %}
 {% endwith %}
 
+{% if erro %}
+  <div class="alert alert-danger">{{ erro }}</div>
+{% endif %}
+
   <form method="POST">
     <div class="field">
       <label>Usuário</label>

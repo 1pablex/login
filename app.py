@@ -3,8 +3,10 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_bcrypt import Bcrypt
 from flask_talisman import Talisman
 from database import init_db, db
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from models import Usuario
-from repositories.usuario_repository import nome_existe, criar_usuario
+from repositories.usuario_repository import nome_existe, criar_usuario, buscar_por_id
 from services.autenticacao import (
     validar_credenciais,
     iniciar_sessao,
@@ -26,7 +28,6 @@ from services.email_service import (
 from services.auditoria import registrar, listar_logs
 from services.perfil_service import atualizar_dados
 from services.exclusao_service import excluir_conta
-from repositories.usuario_repository import buscar_por_id
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -39,6 +40,7 @@ bcrypt = Bcrypt(app)
 init_db(app)
 init_mail(app)
 Talisman(app, force_https=False)
+limiter = Limiter(app=app, key_func=get_remote_address)
 
 
 def _ip() -> str:
@@ -60,6 +62,7 @@ def index():
 #Login
 
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def login():
     if request.method == "POST":
         nome  = request.form["username"].strip()
@@ -83,6 +86,10 @@ def login():
         flash("Usuário ou senha inválidos.", "danger")
 
     return render_template("login.html", modo="login")
+@app.errorhandler(429)
+def limite_excedido(e):
+    return render_template("login.html", modo="login", 
+                           erro="Muitas tentativas. Aguarde 1 minuto."), 429
 
 
 #Verificacao 2FA
@@ -261,7 +268,7 @@ def auditoria():
         data = log.criado_em.strftime("%d/%m/%Y %H:%M:%S")
         print(f"{data:<22} {log.evento:<15} {(log.nome or '—'):<15} {(log.ip or '—'):<16} {log.descricao or '—'}")
     print("=" * 70 + "\n")
-    return f"✅ {len(logs)} log(s) impresso(s) no terminal.", 200
+    return f" {len(logs)} log(s) impresso(s) no terminal.", 200
 
 
 if __name__ == "__main__":
