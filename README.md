@@ -10,6 +10,7 @@ Sistema de login com autenticação, criptografia de senha, recuperação de sen
 * Flask
 * Flask-SQLAlchemy
 * Flask-Bcrypt
+* Flask-Limiter
 * SQLite
 * Brevo (envio de e-mail)
 
