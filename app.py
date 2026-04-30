@@ -1,10 +1,3 @@
-"""
-Controller principal da aplicação.
-
-Responsabilidade exclusiva: mapear rotas HTTP para respostas.
-Toda lógica de negócio está nos services.
-"""
-
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_bcrypt import Bcrypt
@@ -31,6 +24,9 @@ from services.email_service import (
     token_valido,
 )
 from services.auditoria import registrar, listar_logs
+from services.perfil_service import atualizar_dados
+from services.exclusao_service import excluir_conta
+from repositories.usuario_repository import buscar_por_id
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -117,7 +113,7 @@ def verificar_2fa():
                   ip=_ip(), descricao="Código 2FA inválido ou expirado")
         flash("Código inválido ou expirado.", "danger")
 
-    return render_template("2fa.html")
+    return render_template("verificar_2fa.html")
 
 
 #Cadastro 
@@ -208,6 +204,49 @@ def redefinir_senha(token: str):
                 return redirect(url_for("login"))
 
     return render_template("redefinir_senha.html", token=token)
+
+@app.route("/perfil", methods=["GET", "POST"])
+def perfil():
+    if not sessao_ativa():
+        return redirect(url_for("login"))
+ 
+    usuario = buscar_por_id(session["usuario_id"])
+ 
+    if request.method == "POST":
+        novo_nome   = request.form["username"].strip()
+        nova_senha  = request.form.get("nova_senha", "").strip() or None
+        senha_atual = request.form.get("senha_atual", "").strip() or None
+ 
+        erro = atualizar_dados(usuario, novo_nome, nova_senha, senha_atual)
+        if erro:
+            flash(erro, "danger")
+        else:
+            session["usuario_nome"] = usuario.nome
+            registrar("PERFIL_ATUALIZADO", nome=usuario.nome, usuario_id=usuario.id,
+                      ip=_ip(), descricao="Dados do perfil atualizados")
+            flash("Dados atualizados com sucesso!", "success")
+ 
+    return render_template("perfil.html", usuario=usuario)
+ 
+ 
+@app.route("/deletar-conta", methods=["POST"])
+def deletar_conta():
+    if not sessao_ativa():
+        return redirect(url_for("login"))
+ 
+    usuario = buscar_por_id(session["usuario_id"])
+    senha   = request.form.get("senha_confirmacao", "")
+ 
+    erro = excluir_conta(usuario, senha)
+    if erro:
+        flash(erro, "danger")
+        return redirect(url_for("perfil"))
+ 
+    registrar("CONTA_DELETADA", nome=usuario.nome,
+              ip=_ip(), descricao="Conta excluída pelo titular")
+    session.clear()
+    flash("Sua conta foi excluída com sucesso.", "success")
+    return redirect(url_for("login"))
 
 
 #Auditoria

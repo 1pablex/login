@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Meu Perfil</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="card" style="max-width:480px">
+  <h1>Meu Perfil</h1>
+  <p class="subtitle">Gerencie seus dados pessoais</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Formulário de atualização -->
+  <form method="POST" action="{{ url_for('perfil') }}">
+    <div class="field">
+      <label>Nome de usuário</label>
+      <input type="text" name="username" value="{{ usuario.nome }}" required>
+    </div>
+
+    <div class="field">
+      <label>E-mail (não pode ser alterado)</label>
+      <input type="email" value="{{ usuario.email }}" disabled
+             style="background:#f0f0f0;cursor:not-allowed;">
+    </div>
+
+    <hr style="margin:20px 0;">
+    <p style="font-size:13px;color:#666;">Preencha abaixo apenas se quiser alterar sua senha:</p>
+
+    <div class="field">
+      <label>Senha atual</label>
+      <input type="password" name="senha_atual" placeholder="Digite sua senha atual">
+    </div>
+
+    <div class="field">
+      <label>Nova senha</label>
+      <input type="password" name="nova_senha" placeholder="Mínimo 8 caracteres">
+    </div>
+
+    <button class="btn" type="submit">Salvar alterações</button>
+  </form>
+
+  <hr style="margin:30px 0;">
+
+  <!-- Exclusão de conta -->
+  <h2 style="color:#c0392b;font-size:18px;">Excluir minha conta</h2>
+  <p style="font-size:13px;color:#666;">
+    Esta ação é irreversível. Todos os seus dados serão permanentemente removidos.
+  </p>
+
+  <form method="POST" action="{{ url_for('deletar_conta') }}"
+        onsubmit="return confirm('Tem certeza? Esta ação não pode ser desfeita.')">
+    <div class="field">
+      <label>Confirme sua senha para excluir</label>
+      <input type="password" name="senha_confirmacao" required>
+    </div>
+    <button type="submit"
+            style="background:#c0392b;color:#fff;border:none;padding:10px 20px;
+                   border-radius:6px;cursor:pointer;font-weight:bold;">
+      Excluir minha conta
+    </button>
+  </form>
+
+  <div class="toggle" style="margin-top:20px;">
+    <a href="{{ url_for('index') }}">← Voltar</a>
+  </div>
+</div>
+</body>
+</html>
