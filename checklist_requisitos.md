@@ -1,4 +1,4 @@
-# Checklist de Requisitos de Segurança — TEAcare 1.0
+# Checklist de Requisitos de Segurança — Sistema de Login 1.0
 
 > **Legenda:** ✅ Implementado · ⚠️ Parcialmente atendido · ❌ Pendente
 
