@@ -16,7 +16,7 @@ O Sistema de Login do TEAcare 1.0 é uma aplicação web desenvolvida em Python 
 | Python + Flask | 3.12 / 3.1.3 | Framework web |
 | Flask-SQLAlchemy | 3.1.1 | ORM para banco de dados |
 | Flask-Bcrypt | 1.0.1 | Hashing seguro de senhas |
-| Flask-Talisman | — | Headers de segurança HTTP |
+| Flask-Talisman | 1.1.0 | Headers de segurança HTTP |
 | SQLite | — | Banco de dados relacional |
 | Brevo REST API | — | Envio de e-mails transacionais |
 | python-dotenv | — | Gerenciamento de variáveis de ambiente |
