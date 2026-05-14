@@ -1,29 +1,27 @@
+"""
+Controller principal da aplicação.
+Responsabilidade exclusiva: mapear rotas HTTP para respostas.
+"""
+
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_bcrypt import Bcrypt
 from flask_talisman import Talisman
-from database import init_db, db
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from database import init_db
 from models import Usuario
-from repositories.usuario_repository import nome_existe, criar_usuario, buscar_por_id
+from repositories.usuario_repository import (
+    nome_existe, criar_usuario, buscar_por_id,
+    buscar_por_email, buscar_por_token, atualizar_campos
+)
 from services.autenticacao import (
-    validar_credenciais,
-    iniciar_sessao,
-    encerrar_sessao,
-    sessao_ativa,
-    senha_valida,
-    role_valida,
-    atualizar_senha,
+    validar_credenciais, iniciar_sessao, encerrar_sessao,
+    sessao_ativa, senha_valida, role_valida, atualizar_senha,
 )
 from services.email_service import (
-    init_mail,
-    enviar_email_recuperacao,
-    enviar_codigo_2fa,
-    gerar_token_recuperacao,
-    gerar_codigo_2fa,
-    codigo_2fa_valido,
-    token_valido,
+    init_mail, enviar_email_recuperacao, enviar_codigo_2fa,
+    gerar_token_recuperacao, gerar_codigo_2fa, codigo_2fa_valido, token_valido,
 )
 from services.auditoria import registrar, listar_logs
 from services.perfil_service import atualizar_dados
@@ -34,21 +32,19 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///usuarios.db")
 
 bcrypt = Bcrypt(app)
-init_db(app)
+init_db()
 init_mail(app)
 Talisman(app, force_https=False)
 limiter = Limiter(app=app, key_func=get_remote_address)
 
 
 def _ip() -> str:
-    """Retorna o IP real do cliente."""
     return request.headers.get("X-Forwarded-For", request.remote_addr)
 
 
-#Rota principal
+# ── Rota principal ──────────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
@@ -59,7 +55,7 @@ def index():
                            role=session.get("usuario_role", ""))
 
 
-#Login
+# ── Login ───────────────────────────────────────────────────────────────────
 
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("5 per minute")
@@ -67,7 +63,6 @@ def login():
     if request.method == "POST":
         nome  = request.form["username"].strip()
         senha = request.form["password"]
-
         usuario = validar_credenciais(nome, senha)
 
         if usuario:
@@ -86,13 +81,9 @@ def login():
         flash("Usuário ou senha inválidos.", "danger")
 
     return render_template("login.html", modo="login")
-@app.errorhandler(429)
-def limite_excedido(e):
-    return render_template("login.html", modo="login", 
-                           erro="Muitas tentativas. Aguarde 1 minuto."), 429
 
 
-#Verificacao 2FA
+# ── Verificação 2FA ─────────────────────────────────────────────────────────
 
 @app.route("/verificar-2fa", methods=["GET", "POST"])
 def verificar_2fa():
@@ -100,16 +91,16 @@ def verificar_2fa():
     if not usuario_id:
         return redirect(url_for("login"))
 
-    usuario = db.session.get(Usuario, usuario_id)
+    usuario = buscar_por_id(usuario_id)
 
     if request.method == "POST":
         codigo = request.form["codigo"].strip()
 
         if codigo_2fa_valido(usuario, codigo):
-            usuario.codigo_2fa        = None
-            usuario.codigo_2fa_expiry = None
-            db.session.commit()
-
+            atualizar_campos(usuario.id, {
+                "codigo_2fa": None,
+                "codigo_2fa_expiry": None,
+            })
             registrar("2FA_OK", nome=usuario.nome, usuario_id=usuario.id,
                       ip=_ip(), descricao="Autenticação 2FA concluída")
             session.pop("2fa_usuario_id", None)
@@ -123,7 +114,7 @@ def verificar_2fa():
     return render_template("verificar_2fa.html")
 
 
-#Cadastro 
+# ── Cadastro ────────────────────────────────────────────────────────────────
 
 @app.route("/cadastro", methods=["GET", "POST"])
 def cadastro():
@@ -132,8 +123,7 @@ def cadastro():
         email   = request.form["email"].strip().lower()
         senha   = request.form["password"]
         role_id = int(request.form.get("role_id", 2))
-
-        erro = senha_valida(senha)
+        erro    = senha_valida(senha)
 
         if nome_existe(nome):
             flash("Usuário já existe.", "danger")
@@ -150,7 +140,7 @@ def cadastro():
     return render_template("cadastro.html", modo="cadastro")
 
 
-#Logout 
+# ── Logout ──────────────────────────────────────────────────────────────────
 
 @app.route("/logout")
 def logout():
@@ -160,13 +150,13 @@ def logout():
     return redirect(url_for("login"))
 
 
-#Recuperação de senha 
+# ── Recuperação de senha ────────────────────────────────────────────────────
 
 @app.route("/recuperar-senha", methods=["GET", "POST"])
 def recuperar_senha():
     if request.method == "POST":
         email   = request.form["email"].strip().lower()
-        usuario = Usuario.query.filter_by(email=email).first()
+        usuario = buscar_por_email(email)
 
         flash("Se esse e-mail estiver cadastrado, você receberá um link em breve.", "success")
 
@@ -187,7 +177,7 @@ def recuperar_senha():
 
 @app.route("/redefinir-senha/<token>", methods=["GET", "POST"])
 def redefinir_senha(token: str):
-    usuario = Usuario.query.filter_by(reset_token=token).first()
+    usuario = buscar_por_token(token)
 
     if not usuario or not token_valido(usuario):
         flash("Link inválido ou expirado.", "danger")
@@ -212,18 +202,21 @@ def redefinir_senha(token: str):
 
     return render_template("redefinir_senha.html", token=token)
 
+
+# ── Perfil / LGPD ──────────────────────────────────────────────────────────
+
 @app.route("/perfil", methods=["GET", "POST"])
 def perfil():
     if not sessao_ativa():
         return redirect(url_for("login"))
- 
+
     usuario = buscar_por_id(session["usuario_id"])
- 
+
     if request.method == "POST":
         novo_nome   = request.form["username"].strip()
         nova_senha  = request.form.get("nova_senha", "").strip() or None
         senha_atual = request.form.get("senha_atual", "").strip() or None
- 
+
         erro = atualizar_dados(usuario, novo_nome, nova_senha, senha_atual)
         if erro:
             flash(erro, "danger")
@@ -232,23 +225,23 @@ def perfil():
             registrar("PERFIL_ATUALIZADO", nome=usuario.nome, usuario_id=usuario.id,
                       ip=_ip(), descricao="Dados do perfil atualizados")
             flash("Dados atualizados com sucesso!", "success")
- 
+
     return render_template("perfil.html", usuario=usuario)
- 
- 
+
+
 @app.route("/deletar-conta", methods=["POST"])
 def deletar_conta():
     if not sessao_ativa():
         return redirect(url_for("login"))
- 
+
     usuario = buscar_por_id(session["usuario_id"])
     senha   = request.form.get("senha_confirmacao", "")
- 
+
     erro = excluir_conta(usuario, senha)
     if erro:
         flash(erro, "danger")
         return redirect(url_for("perfil"))
- 
+
     registrar("CONTA_DELETADA", nome=usuario.nome,
               ip=_ip(), descricao="Conta excluída pelo titular")
     session.clear()
@@ -256,7 +249,7 @@ def deletar_conta():
     return redirect(url_for("login"))
 
 
-#Auditoria
+# ── Auditoria ───────────────────────────────────────────────────────────────
 
 @app.route("/auditoria")
 def auditoria():
@@ -265,10 +258,18 @@ def auditoria():
     print(f"{'DATA/HORA':<22} {'EVENTO':<15} {'USUÁRIO':<15} {'IP':<16} DESCRIÇÃO")
     print("=" * 70)
     for log in logs:
-        data = log.criado_em.strftime("%d/%m/%Y %H:%M:%S")
-        print(f"{data:<22} {log.evento:<15} {(log.nome or '—'):<15} {(log.ip or '—'):<16} {log.descricao or '—'}")
+        data = log["criado_em"].strftime("%d/%m/%Y %H:%M:%S") if log.get("criado_em") else "—"
+        print(f"{data:<22} {log.get('evento','—'):<15} {(log.get('nome') or '—'):<15} {(log.get('ip') or '—'):<16} {log.get('descricao') or '—'}")
     print("=" * 70 + "\n")
-    return f" {len(logs)} log(s) impresso(s) no terminal.", 200
+    return f"✅ {len(logs)} log(s) impresso(s) no terminal.", 200
+
+
+# ── Error handlers ──────────────────────────────────────────────────────────
+
+@app.errorhandler(429)
+def limite_excedido(e):
+    return render_template("login.html", modo="login",
+                           erro="Muitas tentativas. Aguarde 1 minuto."), 429
 
 
 if __name__ == "__main__":

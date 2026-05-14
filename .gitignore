@@ -138,6 +138,7 @@ env.bak/
 venv.bak/
 __pycache__/
 .idea/
+teacare-ed539-firebase-adminsdk-fbsvc-08ecbcc967.json
 *.db
 
 # Spyder project settings

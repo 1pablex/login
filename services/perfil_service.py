@@ -1,3 +1,6 @@
+"""
+Serviço de atualização de perfil do usuário.
+"""
 
 from typing import Optional
 from flask_bcrypt import Bcrypt
@@ -14,13 +17,8 @@ def atualizar_dados(
     senha_atual: Optional[str] = None,
 ) -> Optional[str]:
     """
-    Atualiza nome e/ou senha do usuário mediante confirmação da senha atual.
-
-    Args:
-        usuario: instância do modelo Usuario
-        novo_nome: novo nome desejado
-        nova_senha: nova senha
-        senha_atual: senha atual para confirmação (obrigatória se nova_senha informada)
+    Atualiza nome e/ou senha do usuário.
+    Returns: Mensagem de erro se inválido, None se bem-sucedido.
     """
     if novo_nome != usuario.nome and nome_existe(novo_nome):
         return "Nome de usuário já está em uso."

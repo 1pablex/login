@@ -1,17 +1,22 @@
+"""
+Serviço de e-mail via Brevo REST API.
+Inclui funções de 2FA e recuperação de senha.
+"""
+
 import os
 import secrets
 import random
 import requests
 from datetime import datetime, timedelta
-from database import db
+from repositories.usuario_repository import atualizar_campos
 
 
-def init_mail(app):
-    """Mantido para compatibilidade com app.py."""
+def init_mail(app=None):
+    """Mantido para compatibilidade — sem configuração SMTP necessária."""
     pass
 
 
-def _post_brevo(payload: dict):
+def _post_brevo(payload: dict) -> None:
     """Envia e-mail via API REST do Brevo."""
     api_key      = os.environ.get("BREVO_API_KEY")
     sender_email = os.environ.get("BREVO_SENDER_EMAIL")
@@ -37,7 +42,7 @@ def _post_brevo(payload: dict):
         raise RuntimeError(f"Brevo API error {response.status_code}: {response.text}")
 
 
-def enviar_email_recuperacao(destinatario_email: str, destinatario_nome: str, link: str):
+def enviar_email_recuperacao(destinatario_email: str, destinatario_nome: str, link: str) -> None:
     """Envia e-mail de recuperação de senha."""
     _post_brevo({
         "to": [{"email": destinatario_email, "name": destinatario_nome}],
@@ -57,7 +62,7 @@ def enviar_email_recuperacao(destinatario_email: str, destinatario_nome: str, li
     })
 
 
-def enviar_codigo_2fa(destinatario_email: str, destinatario_nome: str, codigo: str):
+def enviar_codigo_2fa(destinatario_email: str, destinatario_nome: str, codigo: str) -> None:
     """Envia código de verificação 2FA por e-mail."""
     _post_brevo({
         "to": [{"email": destinatario_email, "name": destinatario_nome}],
@@ -75,11 +80,15 @@ def enviar_codigo_2fa(destinatario_email: str, destinatario_nome: str, codigo: s
 
 
 def gerar_codigo_2fa(usuario) -> str:
-    """Gera e persiste um código 2FA de 6 dígitos."""
-    codigo = f"{random.randint(0, 999999):06d}"
+    """Gera e persiste um código 2FA de 6 dígitos no Firestore."""
+    codigo  = f"{random.randint(0, 999999):06d}"
+    expiry  = datetime.utcnow() + timedelta(minutes=10)
+    atualizar_campos(usuario.id, {
+        "codigo_2fa": codigo,
+        "codigo_2fa_expiry": expiry,
+    })
     usuario.codigo_2fa        = codigo
-    usuario.codigo_2fa_expiry = datetime.utcnow() + timedelta(minutes=10)
-    db.session.commit()
+    usuario.codigo_2fa_expiry = expiry
     return codigo
 
 
@@ -87,22 +96,34 @@ def codigo_2fa_valido(usuario, codigo: str) -> bool:
     """Verifica se o código 2FA é válido e não expirou."""
     if not usuario.codigo_2fa or not usuario.codigo_2fa_expiry:
         return False
-    if datetime.utcnow() > usuario.codigo_2fa_expiry:
+    expiry = usuario.codigo_2fa_expiry
+    # Firestore retorna datetime com timezone — normaliza para naive
+    if hasattr(expiry, 'tzinfo') and expiry.tzinfo is not None:
+        from datetime import timezone
+        expiry = expiry.replace(tzinfo=None)
+    if datetime.utcnow() > expiry:
         return False
     return usuario.codigo_2fa == codigo
 
 
 def gerar_token_recuperacao(usuario) -> str:
-    """Gera e persiste um token de recuperação no usuário."""
-    token = secrets.token_urlsafe(32)
+    """Gera e persiste um token de recuperação no Firestore."""
+    token  = secrets.token_urlsafe(32)
+    expiry = datetime.utcnow() + timedelta(hours=1)
+    atualizar_campos(usuario.id, {
+        "reset_token": token,
+        "reset_token_expiry": expiry,
+    })
     usuario.reset_token        = token
-    usuario.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
-    db.session.commit()
+    usuario.reset_token_expiry = expiry
     return token
 
 
 def token_valido(usuario) -> bool:
-    """Verifica se o token ainda está dentro do prazo."""
+    """Verifica se o token de recuperação ainda está dentro do prazo."""
     if not usuario or not usuario.reset_token_expiry:
         return False
-    return datetime.utcnow() < usuario.reset_token_expiry
+    expiry = usuario.reset_token_expiry
+    if hasattr(expiry, 'tzinfo') and expiry.tzinfo is not None:
+        expiry = expiry.replace(tzinfo=None)
+    return datetime.utcnow() < expiry
