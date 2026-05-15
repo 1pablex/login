@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Termos de Uso e Política de Privacidade</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="card-wide" style="max-width:720px">
+  <h1>Termos de Uso e Política de Privacidade</h1>
+  <p class="subtitle">Versão 1.0 — Abril de 2026</p>
+
+  <!-- 1. Controlador -->
+  <h2 style="font-size:16px;margin-top:24px;">1. Identificação do Controlador</h2>
+  <p style="font-size:13px;color:#444;">
+    O <strong>TEAcare</strong> é o controlador dos dados pessoais coletados por este sistema,
+    nos termos do Art. 5º, VI da Lei nº 13.709/2018 (LGPD). Dúvidas podem ser enviadas para
+    <a href="mailto:privacidade@teacare.com.br">privacidade@teacare.com.br</a>.
+  </p>
+
+  <!-- 2. Dados coletados -->
+  <h2 style="font-size:16px;margin-top:24px;">2. Dados Coletados e Finalidades</h2>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
+    <thead>
+      <tr style="background:#2c3e50;color:#fff;">
+        <th style="padding:8px;text-align:left;border:1px solid #ccc;">Dado</th>
+        <th style="padding:8px;text-align:left;border:1px solid #ccc;">Finalidade</th>
+        <th style="padding:8px;text-align:left;border:1px solid #ccc;">Base Legal (LGPD)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#f9f9f9;">
+        <td style="padding:8px;border:1px solid #ccc;">Nome de usuário</td>
+        <td style="padding:8px;border:1px solid #ccc;">Identificação e autenticação no sistema</td>
+        <td style="padding:8px;border:1px solid #ccc;">Art. 7º, V — Execução de contrato</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;border:1px solid #ccc;">E-mail</td>
+        <td style="padding:8px;border:1px solid #ccc;">Recuperação de senha e autenticação 2FA</td>
+        <td style="padding:8px;border:1px solid #ccc;">Art. 7º, V — Execução de contrato</td>
+      </tr>
+      <tr style="background:#f9f9f9;">
+        <td style="padding:8px;border:1px solid #ccc;">Senha (hash bcrypt)</td>
+        <td style="padding:8px;border:1px solid #ccc;">Autenticação segura — nunca armazenada em texto simples</td>
+        <td style="padding:8px;border:1px solid #ccc;">Art. 7º, V — Execução de contrato</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;border:1px solid #ccc;">Perfil (Psicólogo / Paciente)</td>
+        <td style="padding:8px;border:1px solid #ccc;">Controle de permissões e acesso às funcionalidades</td>
+        <td style="padding:8px;border:1px solid #ccc;">Art. 7º, V — Execução de contrato</td>
+      </tr>
+      <tr style="background:#f9f9f9;">
+        <td style="padding:8px;border:1px solid #ccc;">Logs de auditoria (IP, data, evento)</td>
+        <td style="padding:8px;border:1px solid #ccc;">Segurança, rastreabilidade e prevenção de fraudes</td>
+        <td style="padding:8px;border:1px solid #ccc;">Art. 7º, II — Obrigação legal</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 3. Minimização -->
+  <h2 style="font-size:16px;margin-top:24px;">3. Minimização de Dados</h2>
+  <p style="font-size:13px;color:#444;">
+    Coletamos <strong>apenas os dados estritamente necessários</strong> para o funcionamento
+    do sistema, conforme o princípio da minimização previsto no Art. 6º, III da LGPD.
+    Não coletamos CPF, endereço, telefone ou qualquer outro dado além dos listados acima.
+  </p>
+
+  <!-- 4. Direitos -->
+  <h2 style="font-size:16px;margin-top:24px;">4. Seus Direitos como Titular (Art. 18 da LGPD)</h2>
+  <ul style="font-size:13px;color:#444;line-height:1.8;">
+    <li><strong>Acesso:</strong> visualize todos os seus dados em <em>Meus Dados</em>.</li>
+    <li><strong>Retificação:</strong> altere nome de usuário e senha em <em>Perfil</em>.</li>
+    <li><strong>Exportação:</strong> baixe seus dados em formato CSV em <em>Meus Dados</em>.</li>
+    <li><strong>Exclusão / Revogação:</strong> exclua sua conta permanentemente em <em>Perfil → Excluir minha conta</em>.</li>
+    <li><strong>Informação:</strong> este documento descreve todas as finalidades do tratamento.</li>
+  </ul>
+
+  <!-- 5. Segurança -->
+  <h2 style="font-size:16px;margin-top:24px;">5. Segurança dos Dados</h2>
+  <ul style="font-size:13px;color:#444;line-height:1.8;">
+    <li>Senhas armazenadas com hash <strong>bcrypt</strong> (fator de custo 12).</li>
+    <li>Comunicação protegida por <strong>TLS/HTTPS</strong> em produção.</li>
+    <li>Autenticação em dois fatores (<strong>2FA</strong>) obrigatória.</li>
+    <li>Headers de segurança HTTP via <strong>Flask-Talisman</strong> (CSP, HSTS, X-Frame-Options).</li>
+    <li>Credenciais protegidas por variáveis de ambiente, nunca expostas no código-fonte.</li>
+  </ul>
+
+  <!-- 6. Retenção -->
+  <h2 style="font-size:16px;margin-top:24px;">6. Retenção e Exclusão dos Dados</h2>
+  <p style="font-size:13px;color:#444;">
+    Seus dados são mantidos enquanto sua conta estiver ativa. Ao excluir a conta ou revogar
+    o consentimento, todos os dados pessoais identificáveis são removidos permanentemente.
+    Logs de auditoria podem ser retidos por obrigação legal.
+  </p>
+
+  <!-- 7. Consentimento -->
+  <h2 style="font-size:16px;margin-top:24px;">7. Consentimento</h2>
+  <p style="font-size:13px;color:#444;">
+    Ao criar sua conta, você declara ter lido e concordado com esta política, autorizando o
+    tratamento dos dados listados para as finalidades descritas, nos termos do Art. 7º, I da LGPD.
+    Você pode <strong>revogar seu consentimento</strong> a qualquer momento em
+    <em>Perfil → Excluir minha conta</em>.
+  </p>
+
+  <!-- 8. DPO -->
+  <h2 style="font-size:16px;margin-top:24px;">8. Encarregado de Dados (DPO)</h2>
+  <p style="font-size:13px;color:#444;">
+    Para exercer seus direitos ou esclarecer dúvidas, entre em contato pelo e-mail
+    <a href="mailto:privacidade@teacare.com.br">privacidade@teacare.com.br</a>.
+  </p>
+
+  <hr style="margin:30px 0;">
+
+  <div class="toggle">
+    <a href="{{ url_for('cadastro') }}">← Voltar ao Cadastro</a>
+    &nbsp;·&nbsp;
+    <a href="{{ url_for('index') }}">Página Inicial</a>
+  </div>
+</div>
+</body>
+</html>

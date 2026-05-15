@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  
+<div class="card">
+  <div style="display:flex;justify-content:flex-end;">
+  <a href="{{ url_for('perfil') }}" class="logout" style="margin-top:0;">
+    Meu Perfil
+  </a>
+</div>
+
+  <div class="avatar">     
+    {% if role == 'Psicologo' %}🧠{% else %}🧑{% endif %}  
+  </div>
+  <h1>Bem-vindo, {{ nome }}!</h1>
+  <span class="role-badge role-{{ role }}">{{ role }}</span>
+  <br>
+  <a class="logout" href="{{ url_for('logout') }}">Sair</a>
+</div>
+</div>
+</body>
+</html>
